@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json.Serialization;
+using CityInfo.API.Services;
 
 namespace CityInfo.API {
     public class Startup {
@@ -24,6 +25,8 @@ namespace CityInfo.API {
             //         castedResolver.NamingStrategy = null;
             //     }
             // });
+            services.AddTransient<IMailService, LocalMailService>();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
