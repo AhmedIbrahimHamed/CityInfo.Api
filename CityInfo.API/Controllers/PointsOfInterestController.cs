@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CityInfo.API.Models;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfo.API.Controllers {
     [ApiController]
     [Route("api/cities/{cityId}/PointsOfInterest")]
     public class PointsOfInterestController : ControllerBase {
+
 
         [HttpGet]
         public IActionResult GetPointsOfInterest(int cityId) {
@@ -104,6 +106,71 @@ namespace CityInfo.API.Controllers {
 
             pointOfInterestFromStore.Name = pointOfInterestforUpdate.Name;
             pointOfInterestFromStore.Description = pointOfInterestforUpdate.Description;
+
+            return NoContent();
+
+        }
+
+        [HttpPatch("{pointId}")]
+        public IActionResult PartiallyUpdatePointOfInterest(int cityId, int pointId, 
+            [FromBody] JsonPatchDocument<PointOfInterestforUpdateDto> patchDoc) {
+
+            CityDto selectedCity = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+
+            if (selectedCity == null) {
+                return NotFound();
+            }
+
+            PointOfInterestDto pointOfInterestFromStore = selectedCity.PointsOfInterest.FirstOrDefault(p => p.Id == pointId);
+
+            if (pointOfInterestFromStore == null) {
+                return NotFound();
+            }
+
+            PointOfInterestforUpdateDto pointOfInterestToPatch = new PointOfInterestforUpdateDto() {
+                Name = pointOfInterestFromStore.Name,
+                Description = pointOfInterestFromStore.Description
+            };
+
+            patchDoc.ApplyTo(pointOfInterestToPatch, ModelState);
+
+            if (!ModelState.IsValid) {
+                return BadRequest(ModelState);
+            }
+
+            if (pointOfInterestToPatch.Name == pointOfInterestToPatch.Description) {
+                ModelState.AddModelError(
+                    "Description",
+                    "The provided description should be different from the name."
+                    );
+            }
+
+            if (!TryValidateModel(pointOfInterestToPatch)) {
+                return BadRequest(ModelState);
+            }
+
+            pointOfInterestFromStore.Name = pointOfInterestToPatch.Name;
+            pointOfInterestFromStore.Description = pointOfInterestToPatch.Description;
+
+            return NoContent();
+        }
+
+        [HttpDelete("{pointId}")]
+        public IActionResult DeletePointOfInterest(int cityId, int pointId) {
+
+            CityDto selectedCity = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+
+            if (selectedCity == null) {
+                return NotFound();
+            }
+
+            PointOfInterestDto pointOfInterestFromStore = selectedCity.PointsOfInterest.FirstOrDefault(p => p.Id == pointId);
+
+            if (pointOfInterestFromStore == null) {
+                return NotFound();
+            }
+
+            selectedCity.PointsOfInterest.Remove(pointOfInterestFromStore);
 
             return NoContent();
 
