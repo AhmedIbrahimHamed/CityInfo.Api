@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using CityInfo.API.Entities;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.JsonPatch;
@@ -15,41 +17,52 @@ namespace CityInfo.API.Controllers {
 
         private readonly ILogger<PointsOfInterestController> _logger;
         private readonly IMailService _mailService;
+        private readonly ICityInfoRepository _cityInfoRepository;
+        private readonly IMapper _mapper;
 
-        public PointsOfInterestController(ILogger<PointsOfInterestController> logger, IMailService mailService) {
+        public PointsOfInterestController(ILogger<PointsOfInterestController> logger,
+                                          IMailService mailService,
+                                          ICityInfoRepository cityInfoRepository,
+                                          IMapper mapper) {
+
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mailService = mailService ?? throw new ArgumentNullException(nameof(mailService));
+            _cityInfoRepository = cityInfoRepository ?? throw new ArgumentNullException(nameof(cityInfoRepository));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         [HttpGet]
         public IActionResult GetPointsOfInterest(int cityId) {
-            CityDto selectedCity = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
 
-            if (selectedCity == null) {
+            if (!_cityInfoRepository.CityExists(cityId)) {
                 _logger.LogInformation($"City with id {cityId} wasn't found when accessing points of interest.");
                 return NotFound();
             }
 
-            return Ok(selectedCity.PointsOfInterest);
+            IEnumerable<PointOfInterest> selectedCityPointsEntity = _cityInfoRepository.GetPointsOfInterest(cityId);
 
+            IEnumerable<PointOfInterestDto> pointsOfInterestsResult = _mapper.Map<IEnumerable<PointOfInterestDto>>(selectedCityPointsEntity);
+            
+            return Ok(pointsOfInterestsResult);
             
         }
 
-        [HttpGet("{pointId}", Name ="GetPointOfinterest")]
+        [HttpGet("{pointId}")]
         public IActionResult GetPointOfInterest(int cityId, int pointId) {
-            CityDto selectedCity = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
 
-            if (selectedCity == null) {
+            if (!_cityInfoRepository.CityExists(cityId)) {
                 return NotFound();
             }
 
-            PointOfInterestDto pointOfInterest = selectedCity.PointsOfInterest.FirstOrDefault(p => p.Id == pointId);
+            PointOfInterest pointOfInterestEntity = _cityInfoRepository.GetPointOfInterest(cityId, pointId);
 
-            if (pointOfInterest == null) {
+            if (pointOfInterestEntity == null) {
                 return NotFound();
             }
 
-            return Ok(pointOfInterest);
+            PointOfInterestDto pointResult = _mapper.Map<PointOfInterestDto>(pointOfInterestEntity);
+
+            return Ok(pointResult);
         }
 
         [HttpPost]

@@ -21,7 +21,7 @@ namespace CityInfo.API.Services {
 
         public City GetCity(int cityId, bool includePointsOfInterest) {
             if (includePointsOfInterest) {
-                return _context.Cities.Include(c => c.PointOfInterests).Where(c => c.Id == cityId).FirstOrDefault();
+                return _context.Cities.Include(c => c.PointsOfInterest).Where(c => c.Id == cityId).FirstOrDefault();
             } else {
                 return _context.Cities.Where(c => c.Id == cityId).FirstOrDefault();
 
@@ -35,6 +35,10 @@ namespace CityInfo.API.Services {
         public IEnumerable<PointOfInterest> GetPointsOfInterest(int cityId) {
             return _context.PointOfInterests.Where(p => p.CityId == cityId ).ToList();
 
+        }
+
+        public bool CityExists(int cityId) {
+            return _context.Cities.Any(c => c.Id == cityId);
         }
     }
 }

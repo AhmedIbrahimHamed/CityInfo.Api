@@ -12,6 +12,7 @@ using CityInfo.API.Services;
 using CityInfo.API.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using AutoMapper;
 
 namespace CityInfo.API {
     public class Startup {
@@ -42,6 +43,8 @@ namespace CityInfo.API {
             });
 
             services.AddScoped<ICityInfoRepository, CityInfoRepository>();
+
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
         }
 

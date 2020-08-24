@@ -76,7 +76,7 @@ namespace CityInfo.API.Migrations
             modelBuilder.Entity("CityInfo.API.Entities.PointOfInterest", b =>
                 {
                     b.HasOne("CityInfo.API.Entities.City", "City")
-                        .WithMany("PointOfInterests")
+                        .WithMany("PointsOfInterest")
                         .HasForeignKey("CityId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
