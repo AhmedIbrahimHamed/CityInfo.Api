@@ -137,8 +137,7 @@ namespace CityInfo.API.Controllers {
         [HttpPatch("{pointId}")]
         public IActionResult PartiallyUpdatePointOfInterest(int cityId, int pointId, 
             [FromBody] JsonPatchDocument<PointOfInterestforUpdateDto> patchDoc) {
-
-
+            
             if (!_cityInfoRepository.CityExists(cityId)) {
                 return NotFound();
             }
@@ -180,22 +179,22 @@ namespace CityInfo.API.Controllers {
         [HttpDelete("{pointId}")]
         public IActionResult DeletePointOfInterest(int cityId, int pointId) {
 
-            CityDto selectedCity = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-
-            if (selectedCity == null) {
+            if (!_cityInfoRepository.CityExists(cityId)) {
                 return NotFound();
             }
 
-            PointOfInterestDto pointOfInterestFromStore = selectedCity.PointsOfInterest.FirstOrDefault(p => p.Id == pointId);
+            PointOfInterest pointOfInterestEntity = _cityInfoRepository.GetPointOfInterest(cityId, pointId);
 
-            if (pointOfInterestFromStore == null) {
+            if (pointOfInterestEntity == null) {
                 return NotFound();
             }
 
-            selectedCity.PointsOfInterest.Remove(pointOfInterestFromStore);
+            _cityInfoRepository.DeletePointOfInterestForCity(pointOfInterestEntity);
+
+            _cityInfoRepository.Save();
 
             _mailService.Send("Point of interest deleted",
-                             $"Point of interest {pointOfInterestFromStore.Name} with id {pointOfInterestFromStore.Id} was deleted");
+                             $"Point of interest {pointOfInterestEntity.Name} with id {pointOfInterestEntity.Id} was deleted");
 
             return NoContent();
 
