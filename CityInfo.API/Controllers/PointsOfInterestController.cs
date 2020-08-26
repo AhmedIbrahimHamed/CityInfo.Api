@@ -143,16 +143,13 @@ namespace CityInfo.API.Controllers {
                 return NotFound();
             }
 
-            PointOfInterest pointOfInterestFromStore = _cityInfoRepository.GetPointOfInterest(cityId, pointId);
+            PointOfInterest pointOfInterestEntity = _cityInfoRepository.GetPointOfInterest(cityId, pointId);
 
-            if (pointOfInterestFromStore == null) {
+            if (pointOfInterestEntity == null) {
                 return NotFound();
             }
 
-            PointOfInterestforUpdateDto pointOfInterestToPatch = new PointOfInterestforUpdateDto() {
-                Name = pointOfInterestFromStore.Name,
-                Description = pointOfInterestFromStore.Description
-            };
+            PointOfInterestforUpdateDto pointOfInterestToPatch = _mapper.Map<PointOfInterestforUpdateDto>(pointOfInterestEntity);
 
             patchDoc.ApplyTo(pointOfInterestToPatch, ModelState);
 
@@ -171,8 +168,11 @@ namespace CityInfo.API.Controllers {
                 return BadRequest(ModelState);
             }
 
-            pointOfInterestFromStore.Name = pointOfInterestToPatch.Name;
-            pointOfInterestFromStore.Description = pointOfInterestToPatch.Description;
+            _mapper.Map(pointOfInterestToPatch, pointOfInterestEntity);
+
+            _cityInfoRepository.UpdatedPointOfInterestForCity(cityId, pointOfInterestEntity);
+
+            _cityInfoRepository.Save();
 
             return NoContent();
         }
